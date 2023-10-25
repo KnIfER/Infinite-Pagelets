@@ -1331,16 +1331,7 @@ div a imgx{
             }
             function dataToClipboard(e) 
             {
-                // /console.log(e)
-                function oncopy(event) {
-                    delEvent('copy', oncopy, true, doc);
-                    stop(event, 1);
-                    //event.clipboardData.setData('text/html', e);
-                    event.clipboardData.setData('text/plain', e);
-                }
-                addEvent('copy', oncopy, true, doc);
-                doc.execCommand('copy');
-                delEvent('copy', oncopy, true, doc);
+                navigator.clipboard.writeText(e);
             }
             
             var svg = ge("squircleSVG"), svp = svg.children[0]
