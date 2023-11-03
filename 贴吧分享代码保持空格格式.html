@@ -1,0 +1,192 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>图片转 Base64</title>  
+</head>  
+<app-body id="body">  
+	<div style="display:flex;flex-wrap:nowrap;">
+		<div style="flex:0.5"></div>
+		<button id="btn1" style="white-space: nowrap">编码 space⇨𖤓 tab⇨⬜</button>  
+		<div style="flex:1"></div>
+		<button id="btn2" style="white-space: nowrap">解码 （去除符号格式）</button>  
+		<div style="flex:0.5"></div>
+	</div>
+	
+	<div style="margin-top:8px;display:flex;">
+		&nbsp;输入：
+	</div>
+	
+	<div style="margin-top:8px;display:flex;padding-left:10px;min-height:50px">
+		<textarea id='txt' wrap='off'  name='txt' style="flex:1;resize:vertical;min-height:30px;font-size:large;padding-left: 17px; padding-top:10px;"></textarea>
+	</div>
+	
+	<div style="margin-top:8px;display:flex;">
+		&nbsp;输出：
+	</div>
+	
+	<div style="margin-top:8px;display:flex;padding-left:10px;min-height:200px">
+		<textarea id='res' wrap='off'  name='res' style="flex:1;resize:vertical;min-height:30px;font-size:large;padding-left: 17px; padding-top:10px;"></textarea>
+	</div>
+	
+	<br>
+	<br>
+					
+    <script>  
+		var d = document, doc=d, bg, log=console.log
+			, key, tmps, temps = {}
+			, autoCopy = 1
+			;
+		try{bg=_bg();}catch(e){log(e)} // 与扩展桥接，接口如下：
+		if(bg) { // if runing as embedded pagelet of Infinite-
+			d = bg.view.s; // the shadowDom
+			key = bg.k, tmps=bg.view.tmps;  // store temp variables in tmps[key]={...}
+			temps = tmps[key] ||= {}; 
+			bg.view.style.overflow = "scroll" // fix
+		}
+		function ge(id) { return d.getElementById(id); }
+		function gts(e, d){return (d||doc).getElementsByTagName(e)};
+        function addEvent(a, b, c, d) {
+            d.addEventListener(a, b, c);
+        }
+        function delEvent(a, b, c, d) {
+            d.removeEventListener(a, b, c);
+        }
+		
+		
+		var body=ge("body")
+			,btn1=ge('btn1')
+			,btn2=ge('btn2')
+			,txt=ge('txt')
+			,res=ge('res')
+			;
+		
+		
+        function copy(e, slient) {
+			// log('copy', e)
+			//bg.view.toast('正在复制……');
+			function succ() {
+				var msg = '文本已成功写入剪贴板';
+				if(bg && !slient) bg.view.toast(msg);
+				log(msg);
+			}
+            try{
+				var po = navigator.clipboard.writeText(e);
+				po.then(() => succ());
+				// return;
+			} catch(e) { log(e) } 
+			// webview2 中没有 navigator.clipboard，再试试老办法：
+            // /console.log(e)
+			//bg.view.dataToClipboard(e);
+            function oncopy(event) {
+                delEvent('copy', oncopy, true, doc);
+                stop(event, 1);
+                //event.clipboardData.setData('text/html', e);
+                event.clipboardData.setData('text/plain', e);
+				succ();
+            }
+            addEvent('copy', oncopy, true, doc);
+            doc.execCommand('copy');
+            delEvent('copy', oncopy, true, doc);
+			
+			if(res.style.display!='none') {
+				res.select();  
+				doc.execCommand('copy');  
+			}
+        }
+		
+		btn1.onclick=()=>{
+			res.value = encode(txt.value);
+			copy(res.value);
+		}
+		
+		btn2.onclick=()=>{
+			res.value = decode(txt.value);
+			copy(res.value);
+		}
+		
+		
+		const tab = '▭';
+		const space = '□';
+		const brand = '代码如下：（建议自动格式化复制）';
+		
+		
+		
+		function encode(str) { 
+			var result = '', line, newLine, cc, arr=str.split('\n'); 
+			for (var i = 0; i < arr.length; i++) {  
+				line = arr[i];  
+				newLine = '';
+				cc = 0;
+				for (var j = 0; j < line.length; j++) {  
+					if (line[j] === ' ') {  
+						cc++;
+						newLine += space;
+					} 
+					else if (line[j] === '\t') { 
+						cc++;
+						newLine += tab;
+					}
+					else {  
+						if (cc > 0) {  
+							newLine += line.slice(cc);  
+						} else {  
+							newLine = line;  
+						}  
+						break;
+					}  
+				}
+				result += newLine + '\n';  
+			}
+			if(brand) return brand+'\n'+result;
+			return brand+result;
+		}
+		
+		function decode(str) {
+			var result = '', line, newLine, cc, arr=str.split('\n');
+			if(arr[0]==brand) arr[0]='';	
+			for (var i = 0; i < arr.length; i++) {  
+				line = arr[i];  
+				newLine = '';
+				cc = 0;
+				for (var j = 0; j < line.length; j++) {  
+					if (line[j] == space) {  
+						cc++;
+						newLine += ' ';
+					} 
+					else if (line[j] === tab) { 
+						cc++;
+						newLine += '\t';
+					}
+					else {  
+						if (cc > 0) {  
+							newLine += line.slice(cc);  
+						} else {  
+							newLine = line;  
+						}  
+						break;
+					}  
+				}
+				result += newLine + '\n';  
+			}
+			return result;
+		}
+		
+		
+		if(bg) { // if runing as embedded pagelet of Infinite-
+			bg.getSelection((e)=>{
+				if(e) {
+					txt.value = e;
+					if(autoCopy)
+					if(e.includes(tab) || e.includes(space)) 
+						btn2.click();
+					//else btn.click();
+				}
+			});
+		}
+		
+		// autoCopy=fa
+    </script>
+</app-body>  
+</html>  
