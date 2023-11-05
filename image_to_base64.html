@@ -71,7 +71,8 @@
 			;
 		
 			
-		var dataUrl;
+		var dataUrl
+			,fClibboard;
 		
         function format() {
 			if(ge('ct_0').checked) return 0;
@@ -129,12 +130,12 @@
 			}
 		}
 		function convert() {  
-			if(!dataUrl) {
-				pre_copy();
-				upload.click();
+			if(!dataUrl && !fClibboard) {
+				// pre_copy();
+				// upload.click();
 			}
 			txt.value = '';
-            var imageFile = upload.files[0];  
+            var imageFile = fClibboard || upload.files[0];  
             var reader = new FileReader();
             reader.onload = function(e) {  
                 dataUrl = e.target.result;  
@@ -148,7 +149,7 @@
 		function preview() {  
 			var objectURL=undefined;
 			if(ge('preview').checked) {
-				var imageFile = upload.files[0];  
+				var imageFile = fClibboard || upload.files[0];  
 				objectURL = window.URL.createObjectURL(imageFile);
 			}
             ge("img").src = objectURL;
@@ -166,7 +167,7 @@
         //upload.onclick=pre_copy;
         button.onclick=convert;
         upload.oninput=()=>{
-			dataUrl = 0;
+			fClibboard = dataUrl = 0;
 			if(button.innerText[0]=="已")
 				button.innerText = button.innerText.slice(1);
 			if(auto()) convert();
@@ -236,10 +237,24 @@
 		if(bg) {
             bg.view.onSave = ()=>{
                 getSetVal(inputs, true);
-                debug('onSave', temps);
+                //log('onSave', temps);
 				// 对于无限书签的小页面， temps 是临时数据，重启浏览器就没了。如果需要持久化，直接保存到 bg 对象，然后标记 bg.changed=1即可
             }
 		}
-    </script>
+		// 监听剪贴板粘贴图像
+		addEvent('paste', (e)=>{
+			var clipboardData = e.clipboardData || window.clipboardData;
+			var data = clipboardData.items;
+			for (var i = 0; i < data.length; i++) {
+				var item = data[i];
+				if (item.type.indexOf("image") !== -1) {
+					fClibboard = item.getAsFile();
+					preview();
+					if(auto()) convert();
+					break;
+				}
+			}
+		}, 1, d);
+	</script>
 </app-body>  
 </html>  
