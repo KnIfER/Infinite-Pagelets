@@ -119,6 +119,11 @@
 				line = arr[i];  
 				newLine = '';
 				cc = 0;
+				var idx = line.indexOf('https://');
+				if(idx >= 0) {
+					line = line.slice(0, idx) + "(点⇔。)"+line.slice(idx+8).replaceAll("www", "😅😅😅").replaceAll(".", "😅");
+				}
+				line = line.replaceAll("/", "➗").replaceAll(":", "👒");
 				for (var j = 0; j < line.length; j++) {  
 					if (line[j] === ' ') {  
 						cc++;
@@ -148,6 +153,11 @@
 			if(arr[0]==brand) arr[0]='';	
 			for (var i = 0; i < arr.length; i++) {  
 				line = arr[i];  
+				var idx = line.indexOf('(点⇔。)');
+				if(idx >= 0) {
+					line = line.slice(0, idx) + "https://"+line.slice(idx+5).replaceAll("😅😅😅", "www");//.replaceAll("➗", "/");
+				}
+				line = line.replaceAll("➗", "/").replaceAll("👒", ":");
 				newLine = '';
 				cc = 0;
 				for (var j = 0; j < line.length; j++) {  
